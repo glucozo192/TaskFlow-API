@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/glu/shopvui/tools/gen-layer/models"
+	"github.com/glu-project/tools/gen-layer/models"
 
 	"github.com/cucumber/gherkin-go/v19"
 	"github.com/cucumber/messages-go/v16"

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "pb/;pb";
+
+enum OrderType {
+  OrderType_NONE = 0;
+  ASC = 1;
+  DESC = 2;
+}

@@ -1,39 +1,34 @@
--- get_schema_create
-create table users (
-  user_id text not null,
-  email varchar(255) not null,
-  password varchar(255) not null,
-  first_name varchar(255) ,
-  last_name varchar(255),
-  active bool default true,
+CREATE TABLE IF NOT EXISTS "users"(
+  id text PRIMARY KEY,
+  username text UNIQUE,
+  email text UNIQUE,
+  password text,
+  role_id text,
+  token text,
+  created_by text,
   created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  deleted_at timestamptz,
-  constraint pk_users primary key (user_id),
-  constraint email_unique UNIQUE (email)
+  updated_at timestamptz DEFAULT NOW(),
+  deleted_at timestamptz
 );
 
-create table roles (
-  role_id text not null,
-  name varchar(255),
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  deleted_at timestamptz,
-  constraint pk_roles primary key (role_id)
+CREATE TABLE public.roles (
+    id text PRIMARY KEY,
+    name text UNIQUE,
+    display_name text,
+    created_by text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    deleted_at timestamp with time zone
 );
 
-create table user_roles (
-  user_id text not null,
-  role_id text not null,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  deleted_at timestamptz,
-  constraint pk_user_roles primary key (user_id, role_id)
+CREATE TABLE public.role_permissions (
+    id text PRIMARY KEY,
+    role_id text NOT NULL,
+    path text,
+    name text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    deleted_at timestamp with time zone,
+    FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE
 );
-
-
-alter table user_roles
-add constraint fk_roles_user_roles foreign key (role_id) references roles (role_id);
-alter table user_roles
-add constraint fk_users_user_roles foreign key (user_id) references users (user_id);
 

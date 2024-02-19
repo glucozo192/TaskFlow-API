@@ -1,8 +1,6 @@
 package authenticate
 
-import "time"
-
 type Authenticator interface {
-	CreateToken(userID string, duration time.Duration) (string, *Payload, error)
-	VerifyToken(token string) (*Payload, error)
+	Generate(payload *Payload) (*Token, error)
+	Verify(token string) (*Payload, error)
 }

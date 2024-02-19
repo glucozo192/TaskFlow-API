@@ -3,7 +3,7 @@ package worker
 import (
 	"context"
 
-	"github.com/glu/shopvui/internal/userm/golibs/database"
+	"github.com/glu-project/internal/user/golibs/database"
 	"github.com/hibiken/asynq"
 )
 

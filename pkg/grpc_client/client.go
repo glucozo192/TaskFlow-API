@@ -2,8 +2,9 @@ package grpc_client
 
 import (
 	"context"
-	"github.com/glu/shopvui/configs"
 	"time"
+
+	"github.com/glu-project/configs"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

@@ -71,8 +71,8 @@ start-user:
 
 gen-mock-user:
 	go run github.com/vektra/mockery/v2 \
-		--dir=internal/userm/repositories \
+		--dir=internal/user/repositories \
 		--name=UserRepository \
 		--filename=user_repository_interface.go \
-		--output=internal/userm/mocks \
+		--output=internal/user/mocks \
 		--outpkg=repomocks

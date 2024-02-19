@@ -4,14 +4,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/glu/shopvui/configs"
+	"github.com/glu-project/configs"
 
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "shopvui",
+	Use:   "glu-project",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:

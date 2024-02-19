@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"github.com/glu/shopvui/pkg/postgres"
+	"github.com/glu-project/pkg/postgres"
 
 	"github.com/jackc/pgx/v5"
 )

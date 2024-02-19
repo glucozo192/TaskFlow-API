@@ -9,28 +9,33 @@ import (
 )
 
 type Role struct {
+	ID          string             `db:"id" json:"id"`
+	Name        pgtype.Text        `db:"name" json:"name"`
+	DisplayName pgtype.Text        `db:"display_name" json:"display_name"`
+	CreatedBy   pgtype.Text        `db:"created_by" json:"created_by"`
+	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
+}
+
+type RolePermission struct {
+	ID        string             `db:"id" json:"id"`
 	RoleID    string             `db:"role_id" json:"role_id"`
-	Name      string             `db:"name" json:"name"`
+	Path      pgtype.Text        `db:"path" json:"path"`
+	Name      pgtype.Text        `db:"name" json:"name"`
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	DeletedAt pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
 }
 
 type User struct {
-	UserID    string             `db:"user_id" json:"user_id"`
-	Email     string             `db:"email" json:"email"`
-	Password  string             `db:"password" json:"password"`
-	FirstName string             `db:"first_name" json:"first_name"`
-	LastName  string             `db:"last_name" json:"last_name"`
-	Active    pgtype.Bool        `db:"active" json:"active"`
-	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	DeletedAt pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
-}
-
-type UserRole struct {
-	UserID    string             `db:"user_id" json:"user_id"`
-	RoleID    string             `db:"role_id" json:"role_id"`
+	ID        string             `db:"id" json:"id"`
+	Username  pgtype.Text        `db:"username" json:"username"`
+	Email     pgtype.Text        `db:"email" json:"email"`
+	Password  pgtype.Text        `db:"password" json:"password"`
+	RoleID    pgtype.Text        `db:"role_id" json:"role_id"`
+	Token     pgtype.Text        `db:"token" json:"token"`
+	CreatedBy pgtype.Text        `db:"created_by" json:"created_by"`
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	DeletedAt pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`

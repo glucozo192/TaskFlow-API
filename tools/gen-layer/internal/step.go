@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/glu/shopvui/tools/gen-layer/models"
+	"github.com/glu-project/tools/gen-layer/models"
 
 	"github.com/manifoldco/promptui"
 )

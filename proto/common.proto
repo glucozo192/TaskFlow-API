@@ -5,18 +5,21 @@ option go_package = "pb/;pb";
 
 import "google/protobuf/timestamp.proto";
 import "transform_options/annotations.proto";
+import "google/protobuf/wrappers.proto";
+import "google/api/field_behavior.proto";
 
 option (transformer.go_repo_package) = "models";
 option (transformer.go_protobuf_package) = "pb";
-option (transformer.go_models_file_path) = "internal/userm/models/models.go";
+option (transformer.go_models_file_path) = "internal/user/models/models.go";
 
 message User {
     option (transformer.go_struct) = "User";
-    google.protobuf.Timestamp created_at = 1;
-    google.protobuf.Timestamp updated_at = 2;
-    string email = 3;
-    string user_id = 4;
-    string first_name = 5;
-    string last_name = 6;
-    string password = 7;
+    string id = 1 [ (google.api.field_behavior) = OUTPUT_ONLY ];
+    google.protobuf.StringValue username = 2;
+    google.protobuf.StringValue password = 3;
+    google.protobuf.StringValue email = 4;
+    google.protobuf.StringValue role_id = 5;
+    google.protobuf.StringValue token = 6 ;
+    google.protobuf.Timestamp created_at = 7;
+    google.protobuf.Timestamp updated_at = 8;
 }

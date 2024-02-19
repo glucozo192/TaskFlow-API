@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/glu/shopvui/idl/pb"
-	"github.com/glu/shopvui/pkg/http_server"
+	"github.com/glu-project/idl/pb"
+	"github.com/glu-project/pkg/http_server"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 )

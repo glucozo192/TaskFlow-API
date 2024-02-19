@@ -3,7 +3,7 @@ package main
 import (
 	_ "embed"
 
-	"github.com/glu/shopvui/tools/gen-layer/internal"
+	"github.com/glu-project/tools/gen-layer/internal"
 )
 
 func main() {

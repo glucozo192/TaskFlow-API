@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/glu/shopvui/tools/gen-layer/utils/parser"
+	"github.com/glu-project/tools/gen-layer/utils/parser"
 
 	"github.com/cucumber/messages-go/v16"
 	"golang.org/x/text/cases"

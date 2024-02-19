@@ -46,3 +46,26 @@ func Copy[T, V any](source *V, destination *T) error {
 
 	return nil
 }
+
+func FieldsByDBTag[T any](i *T) (map[string]any, error) {
+	val := reflect.ValueOf(i).Elem()
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	if val.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("input should be a struct")
+	}
+
+	typ := val.Type()
+	out := make(map[string]any)
+
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		tag := field.Tag.Get("db")
+		if tag != "" {
+			out[tag] = val.Field(i).Interface()
+		}
+	}
+
+	return out, nil
+}

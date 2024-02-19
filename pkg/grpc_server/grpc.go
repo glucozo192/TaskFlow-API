@@ -6,7 +6,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/glu/shopvui/configs"
+	"github.com/glu-project/configs"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"

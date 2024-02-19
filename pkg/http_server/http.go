@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/glu/shopvui/configs"
-	"github.com/glu/shopvui/idl/pb"
-	"github.com/glu/shopvui/utils/authenticate"
+	"github.com/glu-project/configs"
+	"github.com/glu-project/idl/pb"
+	"github.com/glu-project/utils/authenticate"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -40,7 +42,9 @@ func NewHttpServer(
 		allowCORS,
 		authorized(
 			authenticator,
+			expirable.NewLRU[string, []string](5, nil, 24*time.Hour),
 		),
+		httpLogger,
 	}
 
 	var handleR http.Handler = mux

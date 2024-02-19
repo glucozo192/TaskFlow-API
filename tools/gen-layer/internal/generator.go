@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"text/template"
 
-	"github.com/glu/shopvui/tools/gen-layer/models"
-	"github.com/glu/shopvui/utils/pathutils"
+	"github.com/glu-project/tools/gen-layer/models"
+	"github.com/glu-project/utils/pathutils"
 
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/slices"

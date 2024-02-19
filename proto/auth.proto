@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "pb/;pb";
+
+import "google/api/annotations.proto";
+import "common.proto";
+import "transform_options/annotations.proto";
+
+option (transformer.go_repo_package) = "models";
+option (transformer.go_protobuf_package) = "pb";
+option (transformer.go_models_file_path) = "internal/user/models/common.go";
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post : "/v1/auth/login"
+      body : "*"
+    };
+  };
+
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post : "/v1/auth/register",
+      body : "*"
+    };
+  };
+
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
+    option (google.api.http) = {
+      post : "/v1/auth/forgot-password"
+      body : "*"
+    };
+  };
+}
+
+// for user(partner and end-user)
+message LoginRequest {
+  option (transformer.go_struct) = "LoginRequest";
+  string username = 1;
+  string password = 2;
+  string device_access = 3;
+}
+
+message LoginResponse {
+  string user_id = 1;
+  string token = 2;
+}
+
+// generate section
+message ForgotPasswordRequest {
+  string phone = 1;
+}
+
+message ForgotPasswordResponse { string token = 1; }
+
+message VerifyOTPRequest { string otp = 1; }
+
+message VerifyOTPResponse {}
+
+message ResetPasswordRequest {
+  string phone = 1;
+  string token = 2;
+  string new_password = 3;
+}
+
+message ResetPasswordResponse {}
+
+message ChangePasswordRequest {
+  string phone = 1;
+  string password = 2;
+  string new_password = 3
+    ;
+}
+
+message ChangePasswordResponse {}
+
+
+message RegisterRequest{
+  User data = 1;
+}
+
+message RegisterResponse{
+  string id = 1;
+  string token = 2 ;
+}

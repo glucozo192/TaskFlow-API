@@ -1,6 +1,6 @@
 with-expecter: true
 packages:
-    github.com/glu/shopvui:
+    github.com/glu-project:
         # place your package-specific config here
         config:
         interfaces:

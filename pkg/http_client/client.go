@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glu-project/configs"
 	"io"
 	"log"
-	"github.com/glu/shopvui/configs"
 	"net/http"
 	"net/url"
 )

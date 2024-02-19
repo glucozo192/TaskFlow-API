@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/glu/shopvui/tools/protoc-gen-custom/internal"
+	"github.com/glu-project/tools/protoc-gen-custom/internal"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 

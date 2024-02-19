@@ -3,7 +3,8 @@ package manticore
 import (
 	"context"
 	"fmt"
-	"github.com/glu/shopvui/configs"
+
+	"github.com/glu-project/configs"
 
 	"github.com/manticoresoftware/go-sdk/manticore"
 )

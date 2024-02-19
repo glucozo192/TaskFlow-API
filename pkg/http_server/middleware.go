@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/glu/shopvui/idl/pb"
-	"github.com/glu/shopvui/utils/authenticate"
+	"github.com/glu-project/idl/pb"
+	"github.com/glu-project/internal/user/models"
+	"github.com/glu-project/utils/authenticate"
+	"github.com/hashicorp/golang-lru/v2/expirable"
+	"github.com/rs/zerolog/log"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/status"
@@ -95,12 +98,13 @@ func forwardErrorResponse(ctx context.Context, s *runtime.ServeMux, m runtime.Ma
 
 func authorized(
 	authenticator authenticate.Authenticator,
+	db models.DBTX,
+	rolePermissionsCache *expirable.LRU[string, []string],
 ) middlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			incomingPath := fmt.Sprintf("%s %s", r.Method, r.URL.Path)
-			fmt.Println("incomingPath: ", incomingPath)
 
 			if isCheckingPassed(ignoredAPIs, incomingPath) {
 				h.ServeHTTP(w, r)
@@ -117,15 +121,103 @@ func authorized(
 				ErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("invalid authorization token"))
 				return
 			}
-			fmt.Println("Verify(token): ", token)
-			payload, err := authenticator.VerifyToken(token)
-			fmt.Println("payload", payload)
+			payload, err := authenticator.Verify(token)
 			if err != nil {
 				ErrorResponse(w, http.StatusUnauthorized, err)
 				return
 			}
 
+			payload.Token = token
+			if payload.RoleID == "" {
+				ErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("you don't have roles to access this URL"))
+				return
+			}
+
+			_, ok := rolePermissionsCache.Get(payload.RoleID)
+			// TODO: refactor in future
+			var rolePermissionRepo rolePermissionRepo = new(postgres.RolePermissionRepository)
+			if !ok {
+				resp, err := rolePermissionRepo.GetListRolePermissions(ctx, db)
+				if err != nil {
+					ErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("got unexpected error when listing enabled paths: %v", err))
+					return
+				}
+				for i := 0; i < len(resp); i++ {
+					rolePermissionsCache.Add(resp[i].RoleID, resp[i].Permissions)
+				}
+			}
+
+			// get current token in DB and check. If token is not match return http.StatusUnauthorized
+			var userLoginRepo userLoginRepo = new(postgres.LoginUserRepository)
+			user, err := userLoginRepo.GetByID(ctx, db, payload.UserID)
+			if err != nil {
+				ErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("got unexpected: %v", err))
+				return
+			}
+
+			if user.Token.String != payload.Token {
+				ErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("your token is not valid"))
+				return
+			}
+
+			permissions, ok := rolePermissionsCache.Get(payload.RoleID)
+			if !ok {
+				ErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("your token is not valid"))
+				return
+			}
+
+			if !isCheckingPassed(permissions, incomingPath) {
+				ErrorResponse(w, http.StatusForbidden, fmt.Errorf("you don't have permission to access this"))
+				return
+			}
+
 			h.ServeHTTP(w, r.WithContext(context.WithValue(ctx, payloadKeys{}, payload)))
+			if isCheckingPassed(invalidateCacheAPIs, incomingPath) {
+				for _, key := range rolePermissionsCache.Keys() {
+					rolePermissionsCache.Remove(key)
+				}
+			}
 		})
 	}
+}
+
+type ResponseRecorder struct {
+	http.ResponseWriter
+	StatusCode int
+	Body       []byte
+}
+
+func (rec *ResponseRecorder) WriteHeader(statusCode int) {
+	rec.StatusCode = statusCode
+	rec.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (rec *ResponseRecorder) Write(body []byte) (int, error) {
+	rec.Body = body
+	return rec.ResponseWriter.Write(body)
+}
+
+func HttpLogger(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		startTime := time.Now()
+		rec := &ResponseRecorder{
+			ResponseWriter: res,
+			StatusCode:     http.StatusOK,
+		}
+		handler.ServeHTTP(rec, req)
+		duration := time.Since(startTime)
+
+		logger := log.Info()
+		if rec.StatusCode != http.StatusOK {
+			logger = log.Error().Bytes("body", rec.Body)
+		}
+
+		logger.Str("protocol", "http").
+			Str("method", req.Method).
+			Str("path", req.RequestURI).
+			Int("status_code", rec.StatusCode).
+			Str("status_text", http.StatusText(rec.StatusCode)).
+			Dur("duration", duration).
+			Msg("received a HTTP request")
+	})
 }

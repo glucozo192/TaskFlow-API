@@ -3,17 +3,18 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/glu/shopvui/idl/pb"
-	"github.com/glu/shopvui/internal/userm/services"
-	"github.com/glu/shopvui/pkg/grpc_client"
-	"github.com/glu/shopvui/pkg/grpc_server"
-	"github.com/glu/shopvui/pkg/http_server"
-	postgres_client "github.com/glu/shopvui/pkg/postgres"
-	"github.com/glu/shopvui/utils/authenticate"
+	"github.com/glu-project/idl/pb"
+	userService "github.com/glu-project/internal/user/services"
+	"github.com/glu-project/pkg/grpc_client"
+	"github.com/glu-project/pkg/grpc_server"
+	"github.com/glu-project/pkg/http_server"
+	postgres_client "github.com/glu-project/pkg/postgres"
+	"github.com/glu-project/utils/authenticate"
 
-	"github.com/glu/shopvui/configs"
-	"github.com/glu/shopvui/utils"
+	"github.com/glu-project/configs"
+	"github.com/glu-project/utils"
 )
 
 var srv server
@@ -82,13 +83,12 @@ func (s *server) loadGrpcClients(ctx context.Context) error {
 
 func (s *server) loadUserServices(ctx context.Context) error {
 	var err error
-	s.authenticator, err = authenticate.NewPasetoAuthenticator(s.cfg.SymmetricKey)
+	s.authenticator, err = authenticate.NewPasetoAuthenticator(s.cfg.SymmetricKey, 24*time.Hour)
 	if err != nil {
 		panic(err)
 	}
-	s.userService = services.NewUserService(
+	s.userService = userService.NewUserService(
 		s.postgresClient,
-		s.authenticator,
 	)
 	return nil
 }
@@ -104,7 +104,7 @@ func (s *server) LoadConfig(ctx context.Context) error {
 
 func (s *server) loadDefault(ctx context.Context) {
 	var err error
-	s.authenticator, err = authenticate.NewPasetoAuthenticator(s.cfg.SymmetricKey)
+	s.authenticator, err = authenticate.NewPasetoAuthenticator(s.cfg.SymmetricKey, 24*time.Hour)
 	if err != nil {
 		panic(err)
 	}

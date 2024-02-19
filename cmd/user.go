@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/glu/shopvui/idl/pb"
-	"github.com/glu/shopvui/pkg/grpc_server"
+	"github.com/glu-project/idl/pb"
+	"github.com/glu-project/pkg/grpc_server"
 	"github.com/spf13/cobra"
 )
 
