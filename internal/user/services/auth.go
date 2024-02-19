@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/glu-project/internal/user/models"
+	"github.com/glu-project/internal/user/repositories/postgres"
 	"github.com/glu-project/transform"
-	"github.com/glu-project/transformhelpers"
 	"github.com/glu-project/utils"
 	"github.com/glu-project/utils/authenticate"
 	"github.com/google/uuid"
@@ -71,19 +71,6 @@ func (s *authService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to generate token: %v", err)
-	}
-
-	// create login_user
-	loginUser := &models.LoginUser{
-		ID:            uuid.NewString(),
-		UserID:        transformhelpers.StringToPgtypeText(user.ID),
-		DevicesAccess: transformhelpers.StringToPgtypeText(req.DeviceAccess),
-		Email:         user.Email,
-		Token:         transformhelpers.StringToPgtypeText(tkn.Token),
-	}
-
-	if err := s.loginUserRepo.Create(ctx, s.db, loginUser); err != nil {
-		return nil, status.Errorf(codes.Internal, "s.loginUserRepo.Create: unexpected error: %v", err)
 	}
 
 	return &pb.LoginResponse{

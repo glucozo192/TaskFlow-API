@@ -44,7 +44,7 @@ func NewHttpServer(
 			authenticator,
 			expirable.NewLRU[string, []string](5, nil, 24*time.Hour),
 		),
-		httpLogger,
+		HttpLogger,
 	}
 
 	var handleR http.Handler = mux
