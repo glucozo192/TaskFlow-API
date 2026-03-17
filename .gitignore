@@ -1,0 +1,14 @@
+# Local environment configs (may contain secrets)
+env.toml
+*.local.toml
+
+# Go build output
+*.exe
+*.out
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

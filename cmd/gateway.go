@@ -12,13 +12,12 @@ import (
 
 var gatewayCmd = &cobra.Command{
 	Use:   "gateway",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Start the HTTP/REST gateway server",
+	Long: `Starts the gRPC-Gateway reverse proxy that exposes all gRPC services
+over HTTP/REST. Handles JWT/PASETO authentication, CORS, and request logging.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Example:
+  go run ./main.go gateway`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
 		loadGateway(ctx)

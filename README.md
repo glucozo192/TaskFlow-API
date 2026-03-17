@@ -1,46 +1,71 @@
-# ToDo API
+# TaskFlow API
 
-A backend microservice-based **ToDo API** built with Go, exposing both **gRPC** and **REST (via gRPC-Gateway)** endpoints. The system supports user authentication with PASETO tokens, task management, and is containerized with Docker.
+> A production-grade backend platform for task management, built with Go.
+> Exposes both **gRPC** (internal) and **REST/HTTP** (external via gRPC-Gateway) endpoints.
+
+[![CI](https://github.com/glucozo192/glu-project/actions/workflows/ci.yaml/badge.svg)](https://github.com/glucozo192/glu-project/actions/workflows/ci.yaml)
+![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+---
+
+## Key Features
+
+- 🔐 **PASETO Authentication** — Stateless token auth with replay-attack protection (token stored & verified against DB on each request)
+- 🛡️ **Role-Based Access Control (RBAC)** — Per-route permission checks using role → permission mappings, with an LRU cache to minimize DB hits
+- 🔍 **Full-text Search with Elasticsearch** — Tasks are indexed on creation and searchable via `multi_match` across `title` and `description`
+- ⚡ **Async Task Queue** — Background jobs powered by [Asynq](https://github.com/hibiken/asynq) (Redis-backed)
+- 🏗️ **Clean Architecture** — Strict separation of `models`, `repositories`, `services`, and `transport` layers
+- 🐳 **Docker-first** — Full Docker Compose setup: Postgres, migrations, proto codegen, and SQLC codegen
 
 ---
 
 ## Architecture
 
-The project follows **Clean Architecture** principles with a clear separation between layers:
+The project follows **Clean Architecture** with clear separation across layers:
 
-![CleanArchitecture](docs/resource/CleanArchitecture.jpg)
+```
+Transport Layer   cmd/gateway.go (REST) · cmd/user.go (gRPC)
+        ↓
+Service Layer     internal/user/services · internal/taks/services
+        ↓
+Repository Layer  internal/*/repositories/postgres · /elasticsearch
+        ↓
+Data Layer        PostgreSQL (pgx/v5 + SQLC) · Elasticsearch
+```
+
+![Clean Architecture Diagram](docs/resource/CleanArchitecture.jpg)
+
+### Project Structure
 
 ```
 .
-├── cmd/                    # CLI entrypoints (cobra commands: gateway, user)
-├── internal/               # Business logic (Clean Architecture layers)
+├── cmd/                    # CLI entry points (cobra): gateway, user
+├── internal/
 │   ├── user/               # User & Auth domain
-│   │   ├── models/         # Domain models
-│   │   ├── repositories/   # Data access layer (Postgres)
-│   │   ├── services/       # Use-case / service layer
-│   │   ├── golibs/         # Shared libs for this domain
-│   │   └── constants/      # Domain constants
+│   │   ├── models/         # Domain types
+│   │   ├── repositories/   # Postgres & login repos
+│   │   └── services/       # auth.go (Login, Register)
 │   └── taks/               # Task domain
-│       ├── models/
 │       ├── repositories/
-│       └── services/
-├── idl/pb/                 # Generated gRPC + gRPC-Gateway protobuf stubs
+│       │   ├── postgres/   # SQLC-generated queries
+│       │   └── elasticsearch/  # Index & full-text search
+│       └── services/       # Task CRUD + ES indexing
+├── idl/pb/                 # Generated gRPC + gRPC-Gateway stubs
 ├── proto/                  # Protobuf source definitions
-├── database/
-│   └── postgres/
-│       ├── migrations/     # SQL migration files (users, tasks)
-│       └── queries/        # SQLC query definitions
-├── transform/              # Protobuf <-> domain model converters
-├── transformhelpers/       # Helper functions for transforms
-├── utils/                  # Shared utilities (password hashing, auth, etc.)
-├── pkg/                    # Reusable packages
-├── worker/                 # Background task workers (Asynq)
-├── configs/                # App configuration loading (TOML)
-├── developments/           # Docker Compose & codegen scripts
-├── docs/                   # Documentation assets
-├── env.toml                # Local environment configuration
-├── Makefile                # Developer shortcuts
-└── main.go                 # Application entrypoint
+├── pkg/
+│   ├── grpc_server/        # gRPC server wrapper
+│   ├── http_server/        # HTTP server + auth middleware
+│   └── elasticsearch_client/
+├── database/postgres/
+│   ├── migrations/         # SQL migrations (users, tasks)
+│   └── queries/            # SQLC query definitions
+├── utils/authenticate/     # PASETO token generation & verification
+├── transform/              # Protobuf ↔ domain model converters
+├── worker/                 # Asynq background task workers
+├── developments/           # Docker Compose, codegen scripts
+├── env.example.toml        # Configuration template (copy → env.toml)
+└── Makefile
 ```
 
 ---
@@ -55,96 +80,96 @@ The project follows **Clean Architecture** principles with a clear separation be
 | [google.golang.org/grpc](https://pkg.go.dev/google.golang.org/grpc) | gRPC server & client |
 | [jackc/pgx/v5](https://github.com/jackc/pgx) | PostgreSQL driver |
 | [kyleconroy/sqlc](https://github.com/sqlc-dev/sqlc) | Type-safe SQL codegen |
-| [golang-migrate/migrate/v4](https://github.com/golang-migrate/migrate) | Database migrations |
-| [hashicorp/golang-lru/v2](https://github.com/hashicorp/golang-lru) | In-memory LRU cache |
+| [golang-migrate/migrate](https://github.com/golang-migrate/migrate) | Database schema migrations |
+| [hashicorp/golang-lru/v2](https://github.com/hashicorp/golang-lru) | Expirable LRU cache for RBAC permissions |
 | [hibiken/asynq](https://github.com/hibiken/asynq) | Async task queue (Redis-backed) |
-| [o1egl/paseto](https://github.com/o1egl/paseto) | PASETO token authentication |
-| [rs/zerolog](https://github.com/rs/zerolog) | Structured logging |
-| [spf13/viper](https://github.com/spf13/viper) | Configuration management (TOML) |
-| [google/uuid](https://github.com/google/uuid) | UUID generation |
-| [elastic/go-elasticsearch/v8](https://github.com/elastic/go-elasticsearch) | Elasticsearch client |
+| [o1egl/paseto](https://github.com/o1egl/paseto) | PASETO v2 token auth |
+| [elastic/go-elasticsearch/v8](https://github.com/elastic/go-elasticsearch) | Elasticsearch full-text search |
+| [rs/zerolog](https://github.com/rs/zerolog) | Structured JSON logging |
+| [spf13/viper](https://github.com/spf13/viper) | TOML configuration |
 
 ### Infrastructure
 | Component | Role |
 |---|---|
-| **PostgreSQL** | Primary database |
-| **Redis** | Asynq task queue backend |
-| **gRPC** | Internal service communication |
-| **Docker / Docker Compose** | Containerized development environment |
-| **Adminer** | Database UI (port `3037`) |
+| **PostgreSQL 13** | Primary relational database |
+| **Elasticsearch 8** | Full-text search engine for tasks |
+| **Redis** | Asynq background job queue |
+| **Docker / Docker Compose** | Containerized dev environment |
+| **Adminer** | Database web UI (`localhost:3037`) |
 
 ---
 
 ## Services
 
-The application exposes two independently runnable services:
-
-| Service | Default Port | Protocol | Description |
+| Service | Port | Protocol | Description |
 |---|---|---|---|
-| `user` | `3030` | gRPC | User management & authentication |
-| `gateway` | `3031` | HTTP/REST | gRPC-Gateway reverse proxy |
+| `user` | `3030` | gRPC | User management & PASETO authentication |
+| `gateway` | `3031` | HTTP/REST | gRPC-Gateway reverse proxy with RBAC middleware |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - [Go 1.24+](https://golang.org/)
 - [Docker & Docker Compose](https://docs.docker.com/compose/)
-- [golang-migrate CLI](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate) *(optional, for direct migration)*
-- [evans](https://github.com/ktr0731/evans) *(optional, for gRPC REPL)*
 
 ### 1. Configure Environment
 
-Copy and edit the config file:
 ```bash
-cp env.toml env.local.toml
-# Edit database URL, ports, symmetric key, etc.
-```
-
-Default configuration (`env.toml`):
-```toml
-postgres_url = "postgres://admin:postgres@localhost:5432/postgres?sslmode=disable"
-symmetric_key = "FKhIvVYqbJihFRJeMcZrpGwJrcKrgQGz"
-
-[user_service_endpoint]
-host = "localhost"
-port = 3030
-
-[gateway_service_endpoint]
-host = "localhost"
-port = 3031
+cp env.example.toml env.toml
+# Edit env.toml: set postgres_url, symmetric_key (32 chars), admin credentials
 ```
 
 ### 2. Start Infrastructure
 
 ```bash
-# Start PostgreSQL
+# PostgreSQL
 make start-postgres
 
-# Start Adminer (DB UI at http://localhost:3037)
+# (Optional) Adminer DB UI → http://localhost:3037
 make adminer
 ```
 
-### 3. Run Database Migrations
+### 3. Run Migrations
 
 ```bash
-# Run all migrations
-make migrate
-
-# Run user-specific migrations only
-make user-migrate
+make migrate        # All migrations
+make user-migrate   # User-specific migrations only
 ```
 
 ### 4. Start Services
 
 ```bash
-# Start the user gRPC service (port 3030)
+# Terminal 1 — gRPC user service (port 3030)
 make start-user
 
-# Start the REST gateway service (port 3031)
+# Terminal 2 — REST gateway (port 3031)
 make start-gateway
 ```
+
+---
+
+## Authentication Flow
+
+```
+1. POST /register → creates user → returns PASETO token
+2. POST /login    → verifies credentials + role → returns PASETO token
+3. All protected routes → middleware validates token against DB (replay protection)
+                       → checks role permissions via RBAC (LRU cached)
+```
+
+---
+
+## Security
+
+| Mechanism | Implementation |
+|---|---|
+| Token type | PASETO v2 (local) — more secure than JWT |
+| Replay protection | Token stored in `users.token` column; verified on every request |
+| RBAC | Role → permissions mapping; per-route enforcement in HTTP middleware |
+| Permission cache | `expirable.LRU` invalidated on role changes |
 
 ---
 
@@ -153,55 +178,44 @@ make start-gateway
 ### Code Generation
 
 ```bash
-# Regenerate protobuf stubs (requires Docker)
-make gen-proto
-
-# Regenerate SQLC type-safe queries (requires Docker)
-make gen-sql
-
-# Regenerate mocks for user repository
-make gen-mock-user
+make gen-proto      # Regenerate protobuf stubs (Docker)
+make gen-sql        # Regenerate SQLC queries (Docker)
+make gen-mock-user  # Regenerate mocks for unit tests
 ```
 
-### gRPC REPL (Evans)
+### Tests
 
 ```bash
-make evans
-# Connects to localhost:9091
+go test ./utils/... -v -race
+```
+
+### gRPC REPL
+
+```bash
+make evans   # Evans → localhost:9091
 ```
 
 ---
 
 ## Database Schema
 
-The database is managed with SQL migration files located in `database/postgres/migrations/`.
+Migrations are in `database/postgres/migrations/`.
 
-### `users` table
-Stores registered users with hashed passwords, roles, and timestamps.
-
-### `tasks` table
+**`tasks`**
 ```sql
 CREATE TABLE IF NOT EXISTS tasks (
     id          text PRIMARY KEY,
     title       text,
     description text,
     status      text        NOT NULL DEFAULT 'TaskStatus_TODO',
-    user_id     text        NOT NULL,
+    user_id     text        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at  timestamptz NOT NULL DEFAULT NOW(),
     updated_at  timestamptz NOT NULL DEFAULT NOW(),
-    deleted_at  timestamptz,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    deleted_at  timestamptz
 );
 ```
 
----
-
-## Authentication
-
-Authentication uses **PASETO v2** tokens. The flow:
-1. `Register` → creates user, returns a signed PASETO token.
-2. `Login` → validates credentials + role, returns a PASETO token.
-3. All protected endpoints require the token in the `Authorization` header.
+Tasks are also indexed into Elasticsearch on write for full-text search.
 
 ---
 
@@ -210,13 +224,12 @@ Authentication uses **PASETO v2** tokens. The flow:
 | Command | Description |
 |---|---|
 | `make start-postgres` | Start PostgreSQL via Docker Compose |
-| `make adminer` | Start Adminer DB UI |
+| `make adminer` | Start Adminer DB UI at port 3037 |
 | `make migrate` | Run all DB migrations |
-| `make user-migrate` | Run user-specific DB migrations |
+| `make user-migrate` | Run user-specific migrations |
 | `make start-user` | Start the gRPC user service |
-| `make start-gateway` | Start the REST gateway service |
+| `make start-gateway` | Start the REST gateway |
 | `make gen-proto` | Regenerate protobuf stubs |
-| `make gen-sql` | Regenerate SQLC queries |
+| `make gen-sql` | Regenerate SQLC type-safe queries |
 | `make gen-mock-user` | Regenerate mocks for user repository |
 | `make evans` | Open Evans gRPC REPL |
-| `make sqlc` | Run sqlc generate (local) |

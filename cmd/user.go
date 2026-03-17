@@ -13,13 +13,13 @@ import (
 // userCmd represents the User command
 var userCmd = &cobra.Command{
 	Use:   "user",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Start the user gRPC service",
+	Long: `Starts the user gRPC service responsible for authentication (Login, Register)
+and user management. Connects to PostgreSQL and exposes a gRPC server
+for internal consumption by the gateway service.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Example:
+  go run ./main.go user`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
 		loadUser(ctx)
