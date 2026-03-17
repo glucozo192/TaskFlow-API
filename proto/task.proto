@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "pb/;pb";
+
+import "google/api/annotations.proto";
+import "common.proto";
+import "enum.proto";
+
+service TaskService {
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse) {
+    option (google.api.http) = {
+      post : "/v1/tasks"
+      body : "*"
+    };
+  };
+
+  rpc GetTaskByID(GetTaskByIDRequest) returns (GetTaskByIDResponse) {
+    option (google.api.http) = {
+      get : "/v1/tasks/{id}"
+    };
+  };
+
+  rpc GetListTask(GetListTaskRequest) returns (GetListTaskResponse) {
+    option (google.api.http) = {
+      get : "/v1/tasks"
+    };
+  };
+
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse) {
+    option (google.api.http) = {
+      patch : "/v1/tasks/{id}"
+      body : "*"
+    };
+  };
+
+  rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse) {
+    option (google.api.http) = {
+      delete : "/v1/tasks/{id}"
+    };
+  };
+}
+
+enum TaskStatus {
+  TaskStatus_NONE = 0;
+  TaskStatus_TODO = 1;
+  TaskStatus_IN_PROGRESS = 2;
+  TaskStatus_DONE = 3;
+}
+
+message Task {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  TaskStatus status = 4;
+  string user_id = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message CreateTaskRequest {
+  string title = 1;
+  string description = 2;
+  TaskStatus status = 3;
+  string user_id = 4;
+}
+
+message CreateTaskResponse {
+  string id = 1;
+}
+
+message GetTaskByIDRequest {
+  string id = 1;
+}
+
+message GetTaskByIDResponse {
+  Task data = 1;
+}
+
+message GetListTaskRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  OrderType order_type = 4;
+  string order_by = 5;
+}
+
+message GetListTaskResponse {
+  repeated Task data = 1;
+  int32 total = 2;
+  int32 total_pages = 3;
+  int32 page = 4;
+}
+
+message UpdateTaskRequest {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  TaskStatus status = 4;
+}
+
+message UpdateTaskResponse {}
+
+message DeleteTaskRequest {
+  string id = 1;
+}
+
+message DeleteTaskResponse {}

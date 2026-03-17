@@ -60,7 +60,8 @@ func loadGateway(ctx context.Context) {
 
 	}, srv.cfg.GatewayServiceEndpoint,
 		srv.authenticator,
-		srv.userClient)
+		srv.userClient,
+		srv.postgresClient)
 
 	srv.processors = append(srv.processors, srv.gatewayServer)
 	srv.factories = append(srv.factories, srv.userConnClient)

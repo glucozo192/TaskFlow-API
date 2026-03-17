@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/glu-project/idl/pb"
 	"github.com/glu-project/internal/user/models"
 	"github.com/glu-project/internal/user/repositories/postgres"
 	"github.com/glu-project/transform"

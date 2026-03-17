@@ -11,6 +11,7 @@ import (
 
 	"github.com/glu-project/idl/pb"
 	"github.com/glu-project/internal/user/models"
+	"github.com/glu-project/internal/user/repositories/postgres"
 	"github.com/glu-project/utils/authenticate"
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,18 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/status"
 )
+
+// rolePermissionRepo defines the interface for reading role permissions.
+type rolePermissionRepo interface {
+	GetListRolePermissions(ctx context.Context, db models.DBTX) ([]*models.GetListPermissionsRow, error)
+}
+
+// userLoginRepo defines the interface for getting a user by ID (to check token).
+type userLoginRepo interface {
+	GetByID(ctx context.Context, db models.DBTX, id string) (*models.User, error)
+}
+
+var invalidateCacheAPIs []string
 
 type middlewareFunc func(http.Handler) http.Handler
 

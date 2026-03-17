@@ -1,15 +1,11 @@
-create table products (
-  product_id text not null,
-  sku varchar(255) not null,
-  name varchar(255) not null,
-  description text,
-  regular_price integer default 0,
-  discount_price integer default 0,
-  quantity integer default 0,
-  taxable bool default false,
-  inserted_at timestamp with time zone not null,
-  updated_at timestamp with time zone not null,
-  constraint pk_products primary key (product_id)
+CREATE TABLE IF NOT EXISTS tasks (
+    id          text PRIMARY KEY,
+    title       text,
+    description text,
+    status      text        NOT NULL DEFAULT 'TaskStatus_TODO',
+    user_id     text        NOT NULL,
+    created_at  timestamptz NOT NULL DEFAULT NOW(),
+    updated_at  timestamptz NOT NULL DEFAULT NOW(),
+    deleted_at  timestamptz,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-
